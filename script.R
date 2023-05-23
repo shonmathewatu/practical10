@@ -336,3 +336,71 @@ plot(MLR_subset_selection, scale="adjr2")
 # is best. I'm dropping frost as it has probably
 # a spurious correlation
 stepAIC(unmodified_model, direction="backward")
+
+#Unmodified model consisting of population, income, illiteracy, Life expetency, High school grad, removing Frost
+
+unmodified_model <- lm(Murder ~ Population + Income + Illiteracy + Life_Exp + HS_Grad, data=training_data)
+summary(unmodified_model)
+
+#Confidence interval of the model
+confint(unmodified_model)
+
+#Outliers for the entire model
+install.packages("car")
+library(car)
+qqPlot(unmodified_model, 
+       labels = row.names(training_data$name), 
+       id.method = "identify", 
+       simulate = TRUE, 
+       main = "Q-Q plot for unmodified model")
+
+
+#Nevada and Maine are both outliers
+training_data["Nevada",]
+training_data["Maine",]
+
+#Use the fitted() function to fit values to the model
+fitted(unmodified_model)["Nevada"]
+fitted(unmodified_model)["Maine"]
+
+# view the errors on a histogram
+#studentized residuals larger than 2 or lessthan 2
+# then they require attention
+studentized_fit <- rstudent(unmodified_model)
+hist(studentized_fit,
+     breaks = 10,
+     freq = FALSE, xlab = "studentized residuals",
+     main = "distribution of errors")
+
+# rug plot is used toi show the distribution of data
+# rug plot looks likee tassles on a rug
+
+rug(jitter(studentized_fit), col = "red")
+
+# line of normality
+curve(dnorm(x, 
+            mean = mean(studentized_fit),
+            sd = sd(studentized_fit)),
+      add = TRUE,
+      col = "blue", 
+      lwed = 2)
+
+# model fit
+
+lines(density(studentized_fit)$x,
+      density(studentized_fit)$y,
+      col = "red",
+      lwd = 2,
+      lty = 2)
+
+# add legend
+
+legend("topright", 
+       legend = c("Normal curve", "Kernal density curve"), 
+       lty = 2, 
+       col = c("blue", "red"))
+
+
+outlierTest(unmodified_model)
+# Maine looks like an outlier
+# how do we resolve this issoe
